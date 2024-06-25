@@ -1,0 +1,177 @@
+HTML
+
+
+<div id="button-background">
+	<span class="slide-text">Swipe</span>
+	<div id="slider">
+		<i id="locker" class="material-icons">lock_open</i>
+	</div>
+</div>
+<div class="bottom">Coded by <a href="https://github.com/gpressutto5">Guilherme Pressutto</a>. Designed by <a href="https://dribbble.com/diegomartins">Diego Martins</a>.</div>
+
+
+
+SCSS
+
+
+$bgColor: #3a3d55;
+$slideBgColor: rgba(255,255,255,0.3);
+$slideBallColor: white;
+$slideBallIconColor: black;
+$slideTextColor: #3a3d55;
+
+
+@mixin center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin nonselect {
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+	cursor: default;
+}
+html, body {
+	height: 100%;
+	overflow: hidden;
+}
+
+body {
+	background-color: $bgColor;
+	@include center;
+}
+
+#button-background {
+	position: relative;
+	background-color: $slideBgColor;
+	width: 400px;
+	height: 80px;
+	border: white;
+	border-radius: 40px;
+  @include center;
+}
+
+#slider {
+	transition: width 0.3s,
+		border-radius 0.3s,
+		height 0.3s;
+	position: absolute;
+	left: -10px;
+	background-color: $slideBallColor;
+	width: 100px;
+	height: 100px;
+	border-radius: 50%;
+	@include center;
+	&.unlocked {
+		transition: all 0.3s;
+		width: inherit;
+		left: 0 !important;
+		height: inherit;
+		border-radius: inherit;
+	}
+}
+
+.material-icons {
+	color: $slideBallIconColor;
+	font-size: 50px;
+	@include nonselect;
+}
+.slide-text {
+	color: $slideTextColor;
+	font-size: 24px;
+	text-transform: uppercase;
+	font-family: 'Roboto', sans-serif;
+	@include nonselect;
+}
+
+.bottom {
+	position: fixed;
+	bottom: 0;
+	font-size: 14px;
+	color: white;
+	a {
+		color: white;
+	}
+}
+
+
+
+
+JS
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    var initialMouse = 0;
+    var slideMovementTotal = 0;
+    var mouseIsDown = false;
+    var slider = document.getElementById("slider");
+    var buttonBackground = document.getElementById("button-background");
+    var slideText = document.querySelector(".slide-text");
+    var locker = document.getElementById("locker");
+
+    slider.addEventListener("mousedown", handleStart);
+    slider.addEventListener("touchstart", handleStart);
+
+    function handleStart(event) {
+        mouseIsDown = true;
+        slideMovementTotal = buttonBackground.offsetWidth - slider.offsetWidth + 10;
+        initialMouse = event.clientX || event.touches[0].pageX;
+        
+        document.body.addEventListener("mousemove", handleMove);
+        document.body.addEventListener("touchmove", handleMove);
+    }
+
+    function handleMove(event) {
+        if (!mouseIsDown) return;
+
+        var currentMouse = event.clientX || event.touches[0].pageX;
+        var relativeMouse = currentMouse - initialMouse;
+        var slidePercent = 1 - relativeMouse / slideMovementTotal;
+
+        if (relativeMouse < slideMovementTotal) {
+            slideText.style.transition = "opacity 300ms";
+            slideText.style.opacity = 1;
+            slider.style.left = "-10px";
+            return;
+        }
+
+        slider.classList.add("unlocked");
+        locker.textContent = "lock_outline";
+
+        setTimeout(function() {
+            slider.addEventListener("click", handleUnlock);
+            slider.addEventListener("tap", handleUnlock);
+        }, 0);
+
+        mouseIsDown = false;
+        document.body.removeEventListener("mousemove", handleMove);
+        document.body.removeEventListener("touchmove", handleMove);
+    }
+
+    function handleUnlock(event) {
+        if (!slider.classList.contains("unlocked")) return;
+
+        slider.classList.remove("unlocked");
+        locker.textContent = "lock_open";
+
+        slider.removeEventListener("click", handleUnlock);
+        slider.removeEventListener("tap", handleUnlock);
+    }
+
+    document.addEventListener("mouseup", function(event) {
+        mouseIsDown = false;
+        slider.style.transition = ""; // reset transition
+        handleMove(event);
+    });
+
+    document.addEventListener("touchend", function(event) {
+        mouseIsDown = false;
+        slider.style.transition = ""; // reset transition
+        handleMove(event);
+    });
+});
